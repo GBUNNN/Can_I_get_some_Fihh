@@ -2,16 +2,24 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import joblib
 
-@st.cache_resource # ใช้เพื่อไม่ให้เครื่องโหลดโมเดลใหม่ทุกครั้งที่กดปุ่ม
-def load_fish_model():
+@st.cache_resource
+def load_all_models():
+    # โหลดโมเดลปลา
     try:
-        # ระบุชื่อไฟล์โมเดลของคุณที่นี่ (ต้องอยู่ในโฟลเดอร์เดียวกัน)
-        model_fish = tf.keras.models.load_model('fish_model.keras')
-        return model_fish
-    except Exception as e:
-        st.error(f"ไม่สามารถโหลดไฟล์ fish_model.keras ได้: {e}")
-        return None
+        f_model = tf.keras.models.load_model('fish_model.keras')
+    except:
+        f_model = None
+    
+    # โหลดโมเดล Steam
+    try:
+        s_model = joblib.load('steam_hit_predictor.pkl')
+    except:
+        s_model = None
+        
+    return f_model, s_model
+model_fish, model_steam = load_all_models()
     
 # --- ตั้งค่าหน้าเว็บ (ส่วนนี้ใส่ไว้ที่บรรทัดแรกสุดของไฟล์เสมอ) ---
 st.set_page_config(page_title="Steam Game Popularity Analysis", layout="wide")
@@ -192,121 +200,99 @@ elif page == "Neural Network (Fish)":
     st.markdown("""
     **Reference:** [Steam Games Dataset on Kaggle](https://www.kaggle.com/datasets/crowww/a-large-scale-fish-dataset/data)
     """)
-
-
 elif page == "Test Model":
-    st.title("Model Inference Test")
-    st.write("ส่วนนี้คือระบบทดสอบการทำนายผลโดยใช้โมเดล **Voting Classifier (.pkl)** ที่ผ่านการฝึกสอนแล้ว")
+    st.title("🧪 Model Inference Test Center")
+    st.write("เลือกแท็บด้านล่างเพื่อทดสอบโมเดลที่ต้องการ")
 
-    # ส่วนรับข้อมูล Input จากผู้ใช้
-    st.header("1. Input Features")
-    st.info("กรุณากรอกข้อมูลคุณลักษณะของเกมที่ต้องการพยากรณ์ให้ครบถ้วนทั้ง 5 ตัวแปร")
+    # สร้าง Tabs แยกส่วนการทดสอบ
+    tab_steam, tab_fish = st.tabs(["🎮 Steam Game Predictor", "🐟 Fish Classification"])
 
-    # สร้างคอลัมน์เพื่อให้หน้าเว็บดูสวยงาม
-    col_in1, col_in2 = st.columns(2)
+    # --- ส่วนที่ 1: ทดสอบโมเดล Steam ---
+    with tab_steam:
+        st.header("Steam Game Popularity Prediction")
+        st.info("กรอกข้อมูลคุณลักษณะของเกมเพื่อทำนายว่าจะเป็น 'เกมฮิต' หรือไม่ (เกณฑ์รีวิวบวก > 500)")
 
-    with col_in1:
-        price = st.number_input("ราคาของเกม (Price - $)", min_value=0.0, value=0.0, step=0.1)
-        achievements = st.number_input("จำนวนความสำเร็จ (Achievements)", min_value=0, value=0, step=1)
-
-    with col_in2:
-        st.write("ระบบปฏิบัติการที่รองรับ (OS Support)")
-        win = st.checkbox("Windows")
-        mac = st.checkbox("Mac")
-        lin = st.checkbox("Linux")
-
-    st.divider()
-
-    # ส่วนประมวลผลเบื้องหลัง (Backend Logic)
-    st.header("Prediction Result")
-    
-    if st.button("กดเพื่อทำนายผล (Predict)"):
-        # --- ขั้นตอนสำคัญ: แปลงค่า Boolean เป็น Integer (1 หรือ 0) ---
-        # ตามที่คุณแนะนำเพื่อน: Checkbox ส่งค่า True/False เราต้องแปลงเป็น 1/0 ก่อนเข้าโมเดล
-        win_int = 1 if win else 0
-        mac_int = 1 if mac else 0
-        lin_int = 1 if lin else 0
-
-        # จำลองการเตรียมข้อมูลป้อนเข้าโมเดล (Input Data)
-        # ลำดับต้องตรงกับตอนเทรน: Price, Windows, Mac, Linux, Achievements
-        input_features = [price, win_int, mac_int, lin_int, achievements]
+        col1, col2 = st.columns(2)
+        with col1:
+            price = st.number_input("ราคาของเกม (Price - $)", min_value=0.0, step=0.1)
+            achievements = st.number_input("จำนวน Achievements", min_value=0, step=1)
         
-        # แสดงข้อมูลที่กำลังส่งไปให้โมเดล (เพื่อให้คนตรวจเห็นกระบวนการ)
-        st.write(f"**Data sent to model:** `{input_features}` (แปลงค่า True/False เป็น 1/0 เรียบร้อยแล้ว)")
+        with col2:
+            st.write("การรองรับระบบปฏิบัติการ (OS Support)")
+            win = st.checkbox("Windows")
+            mac = st.checkbox("Mac")
+            lin = st.checkbox("Linux")
 
-        # --- ส่วนการทำนาย (Simulated Prediction) ---
-        # ในการใช้งานจริง จะต้องใช้: result = model.predict([input_features])[0]
-        # ตัวอย่างนี้ขอกำหนดตัวแปรสมมติเพื่อแสดง UI ตามเงื่อนไขที่คุณให้มาครับ
+        if st.button("ทำนายความฮิตของเกม (Predict Steam)"):
+            if model_steam is not None:
+                # --- Preprocessing: แปลง Boolean (True/False) เป็น Integer (1/0) ---
+                win_int = 1 if win else 0
+                mac_int = 1 if mac else 0
+                lin_int = 1 if lin else 0
+                
+                # เตรียม Input Array (ลำดับ: Price, Windows, Mac, Linux, Achievements)
+                features = np.array([[price, win_int, mac_int, lin_int, achievements]])
+                
+                # ทำนายผลจากโมเดลจริง
+                prediction = model_steam.predict(features)[0]
+
+                if prediction == 1:
+                    st.success("### ระบบทำนายว่า: **เกมนี้จะฮิต!** \n(คาดการณ์ว่าจะมีผู้เล่นรีวิวเชิงบวกมากกว่า 500 คน)")
+                    st.balloons()
+                else:
+                    st.warning("### ระบบทำนายว่า: **เกมนี้อาจจะยังไม่ฮิต** \n(คาดการณ์ว่ายอดรีวิวเชิงบวกอาจไม่ถึง 500 คน)")
+            else:
+                st.error("ไม่พบไฟล์โมเดล steam_hit_predictor.pkl")
+
+    # --- ส่วนที่ 2: ทดสอบโมเดล Fish ---
+    with tab_fish:
+        st.header("Fish Species Classification")
+        st.info("อัปโหลดรูปภาพปลาเพื่อทำนายสายพันธุ์ (9 สายพันธุ์)")
+
+        uploaded_file = st.file_uploader("เลือกไฟล์รูปภาพ (JPG, JPEG, PNG)", type=["jpg", "jpeg", "png"])
+
+        if uploaded_file is not None:
+            # แสดงรูปภาพ
+            image = Image.open(uploaded_file).convert('RGB')
+            st.image(image, caption="รูปภาพที่อัปโหลด", use_container_width=True)
+
+            if st.button("ทำนายสายพันธุ์ปลา (Predict Fish)"):
+                if model_fish is not None:
+                    with st.spinner('กำลังวิเคราะห์...'):
+                        # --- Preprocessing: Resize 224x224 และ Normalize 1/255 ---
+                        img_resized = image.resize((224, 224))
+                        img_array = np.array(img_resized).astype('float32') / 255.0
+                        img_batch = np.expand_dims(img_array, axis=0)
+
+                        # ทำนายผลจริง
+                        preds = model_fish.predict(img_batch)
+                        
+                        # รายชื่อสายพันธุ์
+                        class_names = [
+                            'Black Sea Sprat', 'Gilt-Head Bream', 'Hourse Mackerel', 
+                            'Red Mullet', 'Red Sea Bream', 'Sea Bass', 
+                            'Shrimp', 'Striped Red Mullet', 'Trout'
+                        ]
+                        
+                        idx = np.argmax(preds[0])
+                        label = class_names[idx]
+                        conf = preds[0][idx] * 100
+
+                        st.success(f"### ระบบทายว่าเป็น: **{label}** (มั่นใจ {conf:.2f}%)")
+                        st.progress(preds[0][idx])
+                else:
+                    st.error("ไม่พบไฟล์โมเดล fish_model.keras")
+
+    # --- ส่วนคำอธิบายสำหรับผู้ตรวจ (Expander) ---
+    st.write("---")
+    with st.expander("📝 ดูรายละเอียดกระบวนการจัดการข้อมูล (Technical Details)"):
+        st.markdown("""
+        **โมเดล Steam (Ensemble Model):**
+        *   ทำการแปลงค่า Boolean จาก Checkbox ให้เป็นตัวเลข 0 และ 1
+        *   ใช้ข้อมูล 5 ฟีเจอร์หลักในการป้อนเข้าสู่โมเดล Voting Classifier (.pkl)
         
-        # สมมติผลลัพธ์ (ในโค้ดจริงจะเปลี่ยนตามโมเดล)
-        # ตัวอย่าง: ถ้า achievements > 100 ให้เป็น 1 (Hit)
-        result = 1 if achievements > 100 else 0 
-
-        # --- แสดงผลลัพธ์ตามเงื่อนไขที่คุณระบุ ---
-        if result == 1:
-            st.success("""
-            ### ระบบทำนายว่า: เกมนี้จะฮิต! 
-            **(คาดการณ์ว่าจะมีผู้เล่นรีวิวเชิงบวกมากกว่า 500 คน)**
-            """)
-            st.balloons() # ใส่ Effect แสดงความยินดี
-        else:
-            st.warning("""
-            ### ระบบทำนายว่า: เกมนี้อาจจะยังไม่ฮิต 
-            **(คาดการณ์ว่ายอดรีวิวเชิงบวกอาจไม่ถึง 500 คน)**
-            """)
-
-    # ส่วนคำอธิบายเพิ่มเติมสำหรับอาจารย์
-    with st.expander("คำอธิบายทางเทคนิคสำหรับการแสดงผล"):
-        st.write("""
-        *   **การจัดการข้อมูล:** ระบบจะรับค่าจาก Checkbox (Boolean) แล้วทำการ Mapping ค่าเป็น 0 และ 1 ก่อนส่งให้ไฟล์ `.pkl`
-        *   **เกณฑ์การวัดผล:** ค่า 1 (Hit) หมายถึงผ่านเกณฑ์ 500 รีวิวเชิงบวก ซึ่งเป็นจุดที่เรากำหนดไว้ในขั้นตอน Feature Engineering
-        *   **Ensemble Model:** ผลลัพธ์ที่ได้มาจากการลงคะแนนเสียง (Voting) ระหว่าง Decision Tree, KNN และ Logistic Regression
+        **โมเดล Fish (CNN Model):**
+        *   ทำกระบวนการ **Image Resizing** เป็น 224x224 พิกเซล
+        *   ทำ **Normalization** โดยหารค่าพิกเซลด้วย 255 เพื่อให้ข้อมูลอยู่ในช่วง 0-1
+        *   วิเคราะห์ผลลัพธ์จาก Softmax Output เพื่อหาเปอร์เซ็นต์ความมั่นใจสูงสุด
         """)
-
-    # เพิ่มส่วนทดสอบ Fish Model ด้านล่าง (ถ้าต้องการ)
-    st.divider()
-    st.subheader("Fish Classification Test")
-    st.header("Fish Species Classification Test")
-    st.info("อัปโหลดรูปภาพปลาเพื่อทำนายสายพันธุ์ด้วยโมเดล CNN (MobileNetV2)")
-
-    # 1. ช่องอัปโหลดไฟล์
-    uploaded_file = st.file_uploader("เลือกไฟล์รูปภาพปลา (JPG, JPEG, PNG)", type=["jpg", "jpeg", "png"])
-
-    if uploaded_file is not None:
-        # แสดงรูปภาพที่ผู้ใช้อัปโหลด
-        image = Image.open(uploaded_file).convert('RGB') # แปลงเป็น RGB เพื่อความแน่นอน
-        st.image(image, caption="รูปภาพที่อัปโหลด", use_container_width=True)
-        
-        if st.button("ทำนายสายพันธุ์ปลา (Predict Fish)"):
-             if model_fish is not None:
-                with st.spinner('กำลังวิเคราะห์รูปภาพ...'):
-                    # --- 2. กระบวนการ Preprocessing (ตามที่คุณอธิบาย) ---
-                    # A. Resize เป็น 224x224
-                    img_resized = image.resize((224, 224))
-                    
-                    # B. แปลงเป็น Array และ Normalization (หาร 255)
-                    img_array = np.array(img_resized).astype('float32') / 255.0
-                    
-                    # C. เพิ่มมิติ Batch (จาก [224,224,3] เป็น [1,224,224,3])
-                    img_batch = np.expand_dims(img_array, axis=0)
-
-                    # --- 3. ทำนายผลจริงจากโมเดล ---
-                    predictions = fish_model.predict(img_batch)
-                    
-                    # รายชื่อสายพันธุ์ปลา (ตรวจสอบให้ตรงกับตอนที่เทรน)
-                    class_names = [
-                        'Black Sea Sprat', 'Gilt-Head Bream', 'Hourse Mackerel', 
-                        'Red Mullet', 'Red Sea Bream', 'Sea Bass', 
-                        'Shrimp', 'Striped Red Mullet', 'Trout'
-                    ]
-                    
-                    # หาค่าที่สูงที่สุด
-                    max_idx = np.argmax(predictions[0])
-                    predicted_label = class_names[max_idx]
-                    confidence_score = predictions[0][max_idx] * 100
-
-                    # --- 4. แสดงผลลัพธ์ (Output) ---
-                    st.success(f"### ระบบทายว่าเป็น: **{predicted_label}** (มั่นใจ {confidence_score:.2f}%)")
-                    st.progress(predictions[0][max_idx]) # แสดงกราฟความมั่นใจ
-        else:
-                st.error("ไม่สามารถทำนายได้ เนื่องจากโมเดลไม่ได้ถูกโหลด")
