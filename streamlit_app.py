@@ -3,23 +3,40 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 import joblib
+import os
+import sklearn
+
+st.write("ไฟล์ที่มองเห็นในตอนนี้:", os.listdir())
 
 @st.cache_resource
 def load_all_models():
-    # โหลดโมเดลปลา
-    try:
-        f_model = tf.keras.models.load_model('fish_model.keras')
-    except:
-        f_model = None
+    # หาตำแหน่งโฟลเดอร์ที่ไฟล์ app.py นี้ตั้งอยู่
+    base_path = os.path.dirname(os.path.abspath(__file__))
     
-    # โหลดโมเดล Steam
+    # 1. โหลดโมเดล Steam
+    steam_path = os.path.join(base_path, 'steam_hit_predictor.pkl')
     try:
-        s_model = joblib.load('steam_hit_predictor.pkl')
-    except:
+        s_model = joblib.load(steam_path)
+    except Exception as e:
+        # ถ้าโหลดไม่ได้ ให้แสดง Error จริงๆ ออกมาบนหน้าจอเลย
+        st.sidebar.error(f"Error loading Steam Model: {e}")
         s_model = None
         
+    # 2. โหลดโมเดล Fish
+    fish_path = os.path.join(base_path, 'fish_model.keras')
+    try:
+        f_model = tf.keras.models.load_model(fish_path)
+    except Exception as e:
+        st.sidebar.error(f"Error loading Fish Model: {e}")
+        f_model = None
+        
     return f_model, s_model
+
 model_fish, model_steam = load_all_models()
+
+# --- โค้ดตรวจสอบไฟล์ (ใส่ไว้ชั่วคราวเพื่อเช็คชื่อไฟล์) ---
+st.sidebar.write("ไฟล์ที่โปรแกรมมองเห็น:")
+st.sidebar.write(os.listdir(os.path.dirname(os.path.abspath(__file__))))
     
 # --- ตั้งค่าหน้าเว็บ (ส่วนนี้ใส่ไว้ที่บรรทัดแรกสุดของไฟล์เสมอ) ---
 st.set_page_config(page_title="Steam Game Popularity Analysis", layout="wide")
