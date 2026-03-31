@@ -6,7 +6,6 @@ import joblib
 import os
 import sklearn
 
-st.write("ไฟล์ที่มองเห็นในตอนนี้:", os.listdir())
 
 @st.cache_resource
 def load_all_models():
@@ -35,8 +34,6 @@ def load_all_models():
 model_fish, model_steam = load_all_models()
 
 # --- โค้ดตรวจสอบไฟล์ (ใส่ไว้ชั่วคราวเพื่อเช็คชื่อไฟล์) ---
-st.sidebar.write("ไฟล์ที่โปรแกรมมองเห็น:")
-st.sidebar.write(os.listdir(os.path.dirname(os.path.abspath(__file__))))
     
 # --- ตั้งค่าหน้าเว็บ (ส่วนนี้ใส่ไว้ที่บรรทัดแรกสุดของไฟล์เสมอ) ---
 st.set_page_config(page_title="Steam Game Popularity Analysis", layout="wide")
