@@ -1,19 +1,23 @@
-# 🎈 Blank app template
+# Project IS 2568: AI Models for Steam Game Popularity and Fish Species Classification
 
-A simple Streamlit app template for you to modify!
+โปรเจคนี้เป็นส่วนหนึ่งของวิชา IS โดยมีการพัฒนาระบบปัญญาประดิษฐ์ 2 โมเดล ได้แก่ ระบบทำนายความฮิตของเกม Steam ด้วย Machine Learning แบบ Ensemble และระบบจำแนกสายพันธุ์ปลาด้วย Neural Network (CNN) พร้อมทั้งการพัฒนา Web Application ผ่านเฟรมเวิร์ก Streamlit เพื่ออธิบายทฤษฎีและทดสอบการทำงานของโมเดลทั้งสองประเภทตามข้อกำหนดของรายวิชา
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
+### ข้อมูลชุดที่ 1: Steam Games Dataset
+ข้อมูลชุดนี้ดาวน์โหลดมาจาก Kaggle (อ้างอิง: fronkongames/steam-games-dataset) สำหรับใช้พัฒนาโมเดล Ensemble คุณลักษณะของข้อมูล (Features) ที่นำมาใช้ประกอบด้วย ราคาของเกม (Price), การรองรับระบบปฏิบัติการ Windows, Mac, Linux และจำนวนความสำเร็จภายในเกม (Achievements) ข้อมูลชุดนี้มีความไม่สมบูรณ์เนื่องจากมีคอลัมน์ที่ไม่เกี่ยวข้องและมีแถวที่มีค่าว่าง (Null) ปะปนอยู่ จึงต้องผ่านกระบวนการทำความสะอาดข้อมูลด้วยการลบค่าว่างและแปลงข้อมูลตรรกะ (Boolean) ให้เป็นตัวเลข 0 และ 1 ก่อนนำไปใช้งาน
 
-### How to run it on your own machine
+### ข้อมูลชุดที่ 2: A Large-Scale Fish Dataset
+ข้อมูลชุดนี้ดาวน์โหลดมาจาก Kaggle เช่นกัน (อ้างอิง: crowww/a-large-scale-fish-dataset) สำหรับพัฒนาโมเดล Neural Network ข้อมูลประกอบด้วยภาพถ่ายปลา 9 สายพันธุ์ ข้อมูลชุดนี้มีความไม่สมบูรณ์เนื่องจากมีโฟลเดอร์ Ground Truth (GT) และไฟล์ที่ไม่ใช่รูปภาพมาตรฐานปะปนอยู่ กระบวนการเตรียมข้อมูลจึงต้องสแกนลบไฟล์ขยะเหล่านี้ออก จากนั้นทำการปรับขนาดภาพ (Resize) ให้เป็น 224x224 พิกเซล และปรับสเกลค่าสี (Normalization) ให้อยู่ในช่วง 0 ถึง 1
 
-1. Install the requirements
+### รายละเอียดของโมเดลที่พัฒนา
+โมเดลที่ 1 คือ Machine Learning แบบ Ensemble สำหรับทำนายว่าเกม Steam จะเป็นเกมฮิต (มียอดรีวิวเชิงบวกเกิน 500 คน) หรือไม่ โมเดลนี้ประกอบขึ้นจากอัลกอริทึม 3 ประเภท ได้แก่ Decision Tree, K-Nearest Neighbors (KNN) และ Logistic Regression โดยใช้หลักการ Voting Classifier ในการตัดสินใจผลลัพธ์สุดท้าย
 
-   ```
-   $ pip install -r requirements.txt
-   ```
+โมเดลที่ 2 คือ Neural Network สำหรับจำแนกสายพันธุ์ปลา โมเดลนี้ใช้สถาปัตยกรรม Convolutional Neural Network (CNN) โดยประยุกต์ใช้ Pretrained Model รุ่น MobileNetV2 มาเป็นฐานในการสกัดคุณลักษณะของภาพ จากนั้นเชื่อมต่อกับเลเยอร์ส่วนท้ายใหม่ที่ออกแบบให้มี 9 โหนดเอาต์พุตพร้อมฟังก์ชัน Softmax เพื่อทำนายสายพันธุ์ปลาทั้ง 9 คลาส
 
-2. Run the app
+### การใช้งานและทดสอบระบบ
+ผู้ใช้งานสามารถทดสอบระบบผ่าน Web Application ที่พัฒนาด้วย Streamlit ซึ่งมีหน้าเว็บสำหรับอธิบายทฤษฎีการพัฒนาโมเดล ขั้นตอนการเตรียมข้อมูล และหน้าเว็บสำหรับทดสอบการทำงานของโมเดลทั้งสอง สามารถเข้าถึงเว็บไซต์ที่นำขึ้นระบบ (Deploy) เรียบร้อยแล้วได้ที่ลิงก์: 
 
-   ```
-   $ streamlit run streamlit_app.py
+**[🔗 คลิกที่นี่เพื่อเข้าสู่เว็บไซต์ทดสอบโมเดล (Streamlit Community Cloud)]**
+*(หมายเหตุ: นำลิงก์ของ Streamlit ที่ Deploy เสร็จแล้วมาวางแทนที่ข้อความนี้ก่อนส่งงาน)*
+
+หากต้องการรันระบบในเครื่องส่วนตัว สามารถติดตั้งไลบรารีที่จำเป็นผ่านไฟล์ requirements.txt ด้วยคำสั่ง `pip install -r requirements.txt` จากนั้นรันแอปพลิเคชันด้วยคำสั่ง `streamlit run streamlit_app.py`
    ```
