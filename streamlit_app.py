@@ -293,7 +293,9 @@ elif page == "Test Model":
                         conf = preds[0][idx] * 100
 
                         st.success(f"### ระบบทายว่าเป็น: **{label}** (มั่นใจ {conf:.2f}%)")
-                        st.progress(preds[0][idx])
+                        # แปลงเป็น float ปกติ และจำกัดค่าให้อยู่ในช่วง 0.0 - 1.0 เสมอ
+                        progress_value = float(preds[0][idx])
+                        st.progress(min(max(progress_value, 0.0), 1.0))
                 else:
                     st.error("ไม่พบไฟล์โมเดล fish_model.keras")
 
