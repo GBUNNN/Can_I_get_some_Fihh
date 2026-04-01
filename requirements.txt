@@ -4,3 +4,4 @@ joblib
 tensorflow
 Pillow
 numpy
+tensorflow-cpu
