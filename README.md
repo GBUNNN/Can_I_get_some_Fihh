@@ -20,4 +20,7 @@
 *(หมายเหตุ: นำลิงก์ของ Streamlit ที่ Deploy เสร็จแล้วมาวางแทนที่ข้อความนี้ก่อนส่งงาน)*
 
 หากต้องการรันระบบในเครื่องส่วนตัว สามารถติดตั้งไลบรารีที่จำเป็นผ่านไฟล์ requirements.txt ด้วยคำสั่ง `pip install -r requirements.txt` จากนั้นรันแอปพลิเคชันด้วยคำสั่ง `streamlit run streamlit_app.py`
-   ```
+   ``` ```
+### แหล่งที่มา
+* https://www.kaggle.com/datasets/crowww/a-large-scale-fish-dataset/data
+* https://www.kaggle.com/datasets/fronkongames/steam-games-dataset?resource=download
