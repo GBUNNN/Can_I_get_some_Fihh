@@ -1,7 +1,6 @@
 streamlit
-scikit-learn
+scikit-learn==1.2.2
 joblib
-tensorflow
+tensorflow-cpu==2.15.0
 Pillow
-numpy
-tensorflow-cpu
+numpy<2.0.0
